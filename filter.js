@@ -87,3 +87,64 @@ const valorantAgents = [
 const filtered = valorantAgents.filter(agents => agents.type !== "Sentinel" && (agents.type === "Initiator" || agents.type === "Smoker"));
 
 console.log("return all agents na smoker or initiator", filtered);
+
+
+
+//challenge 5: advanced filtering with multiple types
+const employees = [
+	{name:"Alice", position: "Manager", salary: 60000},
+	{name:"Bob", position: "Developer", salary: 55000},
+	{name:"Charlie", position: "Intern", salary: 20000},
+	{name:"Diana", position: "Manager", salary: 45000},
+	{name:"Edward", position: "Developer", salary: 70000},
+];
+
+const femployees = employees.filter(employee => employee.salary > 50000 && (employee.position === "Manager" || employee.position === "Developer"));
+
+console.log("Filter ng employee na merong salary na greater than 50,000 tapos dapat manager o kaya developer", femployees);
+
+
+//challenge 6: complex object filtering
+const product = [
+	{name: "iphone 12", category: "Electronics", rating: 4.5},	
+	{name: "Samsung Galaxy S21", category: "Electronics", rating: 4.3},
+	{name: "Wireless Earbuds", category: "Electronics", rating: 4.1},
+	{name: "Leather Wallet", category: "Accessories", rating: 3.8},
+	{name: "Phone Case", category: "Accessories", rating: 4.0},
+	
+]; 
+
+
+const filteredproduct = product.filter(filpro => filpro.name.includes("phone") && (filpro.category === "Electronics" || filpro.rating >= 4));
+
+console.log("electronics, rating of 4, and name includes phone: ", filteredproduct);
+
+
+
+//Challenge 7: dynamic filtering based on user input
+const readline = require('readline').createInterface({
+	input: process.stdin,
+	output: process.stdout
+});
+
+const valorantAgentsss = [
+	{name: "Sage", type: "Sentinel" },
+	{name: "Brimstone", type: "Smoker" },
+	{name: "Viper", type: "Smoker" },
+	{name: "Sova", type: "Initiator" },
+	{name: "Phoenix", type: "Duelist" },
+];
+
+
+readline.question('\nInput an agent type: ', fAgents => {
+	const filteredAgents = valorantAgentsss.filter(agents => agents.type.toLowerCase() === fAgents.toLowerCase());
+
+	if (filteredAgents.length > 0) {
+	console.log("Found Agent: ", filteredAgents);
+	readline.close();
+	} else 
+		console.log("Not found");
+	readline.close();
+});
+
+
