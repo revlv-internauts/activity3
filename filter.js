@@ -58,7 +58,7 @@ const mstudents = [
 
 const multiple = mstudents.filter(multiple => multiple.age >= 21 && multiple.grade === "A" );
 
-console.log("yung may age na 22 and above tapos may grade na A: \n", multiple)
+console.log("yung may age na 21 and above tapos may grade na A: \n", multiple)
 
 
 //challenge 3: filtering based on string matching
