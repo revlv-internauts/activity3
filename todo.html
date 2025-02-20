@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<center>	
+	<h1>To-Do System</h1>
+	</center>
+	<center>
+		<h2>Add a task to do: </h2>
+		<input type="text" id="userinput" placeholder="">
+		<button onClick="Add()">Add</button>
+	</center>
+	<center>
+		<pre id="task"></pre>
+	</center>
+
+	<script>
+	let task = [];
+	
+	function Add() {
+		let inputuser = document.getElementById("userinput").value;
+		if (inputuser !== '') {
+			task.push(inputuser);
+			console.log(task);
+			
+			let listoftask = document.getElementById("task");
+			let list = document.createElement("li")
+			document.getElementById("userinput").value = "";
+
+			let checkbox = document.createElement("input");
+			checkbox.type = "checkbox";
+
+			let label = document.createElement("Label");
+			label.textContent = inputuser;
+
+			checkbox.addEventListener("change", function() {
+				if (checkbox.checked) { 
+					label.style.textDecoration = "line-through";
+				} else {
+					label.style.textDecoration = "none";
+				}
+			});
+			list.appendChild(checkbox);
+			list.appendChild(label);
+			listoftask.appendChild(list);
+		
+		}
+	}
+
+
+
+	</script>
+
+</body>
+</html>
