@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <center>
+        <h1>To-Do System</h1>
+        
+        <div class="task-input">
+            <h2>Add a task to do: </h2>
+            <input type="text" id="userinput" placeholder="Enter your task">
+            <button onClick="addTask()">Add</button>
+        </div>
+        
+        <div class="task-list">
+            <ul id="task"></ul>
+        </div>
+    </center>
+
+    <script>
+        let tasks = [];
+
+        async function addTask() {
+            const inputElement = document.getElementById("userinput");
+            const inputUser = inputElement.value.trim();
+            
+            if (inputUser === '') return;
+
+            const list = document.createElement("li");
+            list.className = "task-item";
+            
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            
+            const label = document.createElement("label");
+            label.textContent = " " + inputUser;
+            
+            checkbox.addEventListener("change", async function() {
+                label.style.textDecoration = checkbox.checked ? "line-through" : "none";
+                
+                try {
+                    const response = await fetch('/api/tasks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            task: inputUser,
+                            completed: checkbox.checked
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.success) {
+                        console.error('Failed to save task');
+                    }
+                } catch (error) {
+                    console.error('Error saving task:', error);
+                }
+            });
+
+            list.appendChild(checkbox);
+            list.appendChild(label);
+            document.getElementById("task").appendChild(list);
+            
+            inputElement.value = "";
+            
+            tasks.push(inputUser);
+        }
+    </script>
+</body>
+</html>
+
