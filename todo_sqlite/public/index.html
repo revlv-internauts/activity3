@@ -1,91 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: Roboto, sans-serif; }
+        h1 { color: pink; }
+        ul { list-style: none; padding: 0; }
+        li { text-align: center; padding: 5px; }
+        input {
+            border: 2px solid #b4d455;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+        form {
+            margin: 0 auto;
+            border: 2px solid #cccccc;
+            width: 400px;
+            padding: 10px;
+            text-align: center;
+        }
+        button {
+            background-color: #b4d455;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #98b342;
+        }
+    </style>
+</head>
+<body>
+    <center><h1>TODOS</h1></center>
+    <form id="frm">
+        <input id="todo-input" type="text" placeholder="Enter a task..." required />
+        <button type="submit">Send</button>
+    </form>
+    <ul id="todo-list"></ul>
+    <center><button onclick="logout()">Logout</button></center>
 
-<html>
-	<head>
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-		<style>
-		*{font-family:Roboto}
-		h1{
-			color:pink;
-		}
-		ul {
-			list-style:none;
-		}
-		li {
-			text-align:center;
-		}
-		input{
-		border:2px solid #b4d455;
-		padding:4px 10px;
-		border-radius:4px;
+    <script>
+        const apiURL = 'http://localhost:42069';
+        const todoList = document.getElementById('todo-list');
+        const frm = document.getElementById('frm');
+        const todoInput = document.getElementById('todo-input');
 
-		}	
-		form {
-		margin:0 auto;		
-		border:2px solid #cccccc;
-		width:400px;
-		}
+        frm.addEventListener('submit', async e => {
+            e.preventDefault();
+            if (!todoInput.value.trim()) return;
+            const response = await fetch(`${apiURL}/todos`, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: todoInput.value })
+            });
+            todoInput.value = '';
+            fetchTodos();
+        });
 
-		</style>
-	</head>
-	<body>
-		<center>
-			<h1>TODOS</h1>
-		</center>
-		<form id="frm">
-			<center>
-				<input id="todo-input" type="text"/>
-				<button type="submit">Send</button>
-		</form>
-		<ul id="todo-list"></ul>
-			</center>
-			<script>
-				const apiURL = 'http://localhost:42069'
+        function renderList(todos) {
+            todoList.innerHTML = "";
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.textContent = todo.name;
+                todoList.appendChild(li);
+            });
+        }
 
-				const todoList = document.getElementById('todo-list')
-				const frm = document.getElementById('frm')
-				const todoInput = document.getElementById('todo-input')
+        async function fetchTodos() {
+            const response = await fetch(`${apiURL}/todos`);
+            const json = await response.json();
+            renderList(json);
+        }
 
-				frm.addEventListener('submit', async e => {
-					e.preventDefault()
-					if (!todoInput.value.trim()) return;
-					const response = await fetch(`${apiURL}/todos`, {
-						method: 'POST',
-						headers: {
-							'Accept': 'application/json',
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify({
-							name: todoInput.value
-						})
-					});
-					const json = await response.json()
-					renderList(json.data)
-					todoInput.value = '';
-				})
+        async function logout() {
+            await fetch(`${apiURL}/logout`, { method: 'POST' });
+            window.location.href = '/login.html';
+        }
 
-				function renderList(todos) {
-					todoList.innerHTML = "";
-
-					todos.forEach(todo => {
-						const li = document.createElement('li')
-
-						li.textContent = todo.name
-
-						todoList.appendChild(li)
-					})
-
-				}
-
-				async function fetchTodos() {
-					const response =  await fetch(`${apiURL}/todos`)
-					const json = await response.json()
-					renderList(json.data)
-				}
-
-				fetchTodos();
-
-			</script>
-	</body>
+        fetchTodos();
+    </script>
+</body>
 </html>
+

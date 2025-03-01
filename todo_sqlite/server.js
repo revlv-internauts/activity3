@@ -1,74 +1,79 @@
-const fs = require('fs')
-const cors = require('cors')
-const express = require('express')
+const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
+const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcrypt');
+const session = require('express-session');
 
-const sqlite3 = require('sqlite3');
-
-const path = require('path');
-const PORT = 42069
 const app = express();
-const DATABASE_PATH = 'todos.db'
+const PORT = 42069;
 
-app.use(cors())
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('public'));  // Serve static files (HTML, JS, CSS)
+app.use(session({
+    secret: 'secret-key',
+    resave: false,
+    saveUninitialized: true
+}));
 
-
-const db = new sqlite3.Database(DATABASE_PATH, (err) => {
-	if (err) {
-		console.error('Error opening database', err.message);
-	} else {
-		console.log('Connected to the SQLite database');
-		db.run(`CREATE TABLE IF NOT EXISTS todos (
-		id INTEGER PRIMARY KEY,
-		name TEXT NOT NULL,
-		is_completed INTEGER DEFAULT 0
-		)`);
-	}
+// Initialize database
+const db = new sqlite3.Database(':memory:');
+db.serialize(() => {
+    db.run("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)");
+    db.run("CREATE TABLE todos (id INTEGER PRIMARY KEY, name TEXT, user_id INTEGER)");
+    
+    // Default user: gene / 1234
+    bcrypt.hash('1234', 10, (err, hash) => {
+        db.run("INSERT INTO users (username, password) VALUES (?, ?)", ['gene', hash]);
+    });
 });
 
-function getTodos(callback) {
-	const sql = `SELECT id, name, is_completed as isCompleted FROM todos`;
-	db.all(sql, [], (err, rows) => {
-		if (err) {
-			console.error('Error querying database', err.message);
-			callback([]);
-		} else {
-			callback(rows);
-		}
-	});
+// Authentication Middleware
+function isAuthenticated(req, res, next) {
+    if (req.session.userId) {
+        return next();
+    }
+    res.status(401).json({ error: "Unauthorized" });
 }
 
-app.get('/', function(_, resp) {
-	resp.sendFile(path.join(__dirname, 'public',  '/index.html'));
+// Login Route
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    db.get("SELECT * FROM users WHERE username = ?", [username], (err, user) => {
+        if (err || !user) return res.status(400).json({ success: false });
+        bcrypt.compare(password, user.password, (err, match) => {
+            if (match) {
+                req.session.userId = user.id;
+                res.json({ success: true, redirect: '/index.html' });
+            } else {
+                res.status(400).json({ success: false });
+            }
+        });
+    });
 });
 
-app.get('/todos', function(req, resp) {
-	getTodos((todos) => {
-	resp.json({ data: todos })
-	});
+// Logout Route
+app.post('/logout', (req, res) => {
+    req.session.destroy(() => res.json({ success: true }));
 });
 
-app.post('/todos', function(req, resp) {
-	const todo = {
-		id: +new Date(),
-		name: req.body.name,
-		is_completed: false
-	};
-
-	const sql = `INSERT INTO todos (id, name, is_completed) VALUES (?, ?, ?)`;
-	db.run(sql, [todo.id, todo.name, todo.is_completed], function(err) {
-		if (err) {
-			console.error('Error inserting todo', err.message);
-			return resp.status(500).json({error: 'Failed to save todo' });
-		}
-		getTodos((todos) => {
-			resp.json({ data: todos });
-		});
-	});
+// Get Todos (Authenticated)
+app.get('/todos', isAuthenticated, (req, res) => {
+    db.all("SELECT * FROM todos WHERE user_id = ?", [req.session.userId], (err, rows) => {
+        res.json(rows);
+    });
 });
 
-app.listen(PORT, function() {
-	console.log(`Running on ${PORT}`)
+// Add Todo (Authenticated)
+app.post('/todos', isAuthenticated, (req, res) => {
+    const { name } = req.body;
+    db.run("INSERT INTO todos (name, user_id) VALUES (?, ?)", [name, req.session.userId], () => {
+        res.json({ success: true });
+    });
 });
+
+app.listen(PORT, () => {
+    console.log(`Running on http://localhost:${PORT}`);
+});
+
